@@ -4,7 +4,7 @@ let currentState = 'start'; // Tracks the state of the conversation
 
 async function sendMessage() {
   const userInput = document.getElementById('userInput').value.trim();
-  if (!userInput && currentState !== 'interests') return;
+  if (!userInput && currentState !== 'interests' && currentState !== 'courses') return;
 
   // Display user message
   addMessage(userInput, 'user-message');
@@ -33,33 +33,34 @@ function handleBotResponse(input) {
     // Ask for interests with a dropdown
     const interestsDropdown = `
       <div class="dropdown-container">
-        <select id="interestsDropdown" multiple>
-          <option value="technology">Technology</option>
+        <select id="interestsDropdown">
+          <option value="">Select an Interest</option>
+          <option value="computer">Computer</option>
+          <option value="data">Data</option>
+          <option value="law">Law</option>
           <option value="business">Business</option>
-          <option value="arts">Arts</option>
-          <option value="science">Science</option>
         </select>
         <button id="submitInterests">Submit</button>
       </div>
     `;
-    addMessage("Hello! I'm here to help you choose a course and find the best college. Please select your interests:", 'bot-message');
+    addMessage("Hello! I'm here to help you choose a course and find the best college. Please select your interest:", 'bot-message');
     conversation.innerHTML += interestsDropdown;
 
     // Handle dropdown submission
     document.getElementById('submitInterests').addEventListener('click', () => {
-      const selectedInterests = Array.from(document.getElementById('interestsDropdown').selectedOptions).map(option => option.value);
-      if (selectedInterests.length > 0) {
-        addMessage(`You selected: ${selectedInterests.join(', ')}.`, 'user-message');
-        handleSelectedInterests(selectedInterests);
+      const selectedInterest = document.getElementById('interestsDropdown').value;
+      if (selectedInterest) {
+        addMessage(`You selected: ${selectedInterest.charAt(0).toUpperCase() + selectedInterest.slice(1)}.`, 'user-message');
+        handleSelectedInterest(selectedInterest);
       } else {
-        addMessage("Please select at least one interest.", 'bot-message');
+        addMessage("Please select an interest.", 'bot-message');
       }
     });
 
     currentState = 'interests';
-  } else if (currentState === 'colleges') {
+  } else if (currentState === 'courses') {
     const collegeMapping = mapColleges(input);
-    addMessage(`Here are some colleges offering these courses: ${collegeMapping.join(', ')}.`, 'bot-message');
+    addMessage(`Here are some colleges offering this course: ${collegeMapping.join(', ')}.`, 'bot-message');
     currentState = 'end';
   } else if (currentState === 'end') {
     addMessage("Thank you for using the Educational Tutoring Chatbot! If you have more questions, feel free to ask.", 'bot-message');
@@ -67,51 +68,59 @@ function handleBotResponse(input) {
   }
 }
 
-function handleSelectedInterests(interests) {
-  const recommendedCourses = recommendCourses(interests);
-  addMessage(`Based on your interests (${interests.join(', ')}), here are some recommended courses: ${recommendedCourses.join(', ')}.`, 'bot-message');
-  addMessage(`Which course would you prefer?`, 'bot-message');
-  currentState = 'colleges';
+function handleSelectedInterest(interest) {
+  const courses = recommendCourses(interest);
+  const coursesDropdown = `
+    <div class="dropdown-container">
+      <select id="coursesDropdown">
+        <option value="">Select a Course</option>
+        ${courses.map(course => `<option value="${course}">${course}</option>`).join('')}
+      </select>
+      <button id="submitCourse">Submit</button>
+    </div>
+  `;
+  addMessage(`Based on your interest in ${interest.charAt(0).toUpperCase() + interest.slice(1)}, here are some recommended courses:`, 'bot-message');
+  conversation.innerHTML += coursesDropdown;
+
+  // Handle course selection
+  document.getElementById('submitCourse').addEventListener('click', () => {
+    const selectedCourse = document.getElementById('coursesDropdown').value;
+    if (selectedCourse) {
+      addMessage(`You selected: ${selectedCourse}.`, 'user-message');
+      currentState = 'courses';
+      handleBotResponse(selectedCourse);
+    } else {
+      addMessage("Please select a course.", 'bot-message');
+    }
+  });
 }
 
-function recommendCourses(interests) {
+function recommendCourses(interest) {
   const courses = {
-    technology: [
+    computer: [
       'Computer Science and Engineering (CSE)',
       'CSE (Artificial Intelligence and Machine Learning)',
       'CSE (Data Science)',
       'CSE (Cyber Security)',
-      'Information Technology (IT)',
-      'Electronics and Communication Engineering (ECE)',
-      'Electrical and Electronics Engineering (EEE)',
-      'Mechanical Engineering',
-      'Civil Engineering'
+      'Information Technology (IT)'
+    ],
+    data: [
+      'CSE (Data Science)',
+      'Data Analytics',
+      'Big Data Engineering'
+    ],
+    law: [
+      'Bachelor of Laws (LLB)',
+      'Master of Laws (LLM)',
+      'Corporate Law'
     ],
     business: [
       'Master of Business Administration (MBA)',
       'BBA',
       'Commerce-related courses'
-    ],
-    arts: [
-      'Programs in various arts disciplines',
-      'B.Sc. in Health Psychology',
-      'Dialysis Technology',
-      'Dental Technology'
-    ],
-    science: [
-      'Bachelor of Medicine, Bachelor of Surgery (MBBS)',
-      'Bachelor of Dental Surgery (BDS)',
-      'Bachelor of Pharmacy (B.Pharm)',
-      'Agriculture and related disciplines',
-      'Basic and applied sciences'
     ]
   };
-
-  let recommended = [];
-  interests.forEach(interest => {
-    recommended = recommended.concat(courses[interest] || []);
-  });
-  return [...new Set(recommended)]; // Remove duplicates
+  return courses[interest] || [];
 }
 
 function mapColleges(course) {
@@ -121,25 +130,15 @@ function mapColleges(course) {
     'CSE (Data Science)': ['MREC', 'MRCET'],
     'CSE (Cyber Security)': ['MRCET'],
     'Information Technology (IT)': ['MREC', 'MRCET'],
-    'Electronics and Communication Engineering (ECE)': ['MREC', 'MRCET'],
-    'Electrical and Electronics Engineering (EEE)': ['MREC', 'MRCET'],
-    'Mechanical Engineering': ['MREC', 'MRCET'],
-    'Civil Engineering': ['MREC'],
-    'Mining Engineering': ['MREC'],
+    'Data Analytics': ['MRU'],
+    'Big Data Engineering': ['MRU'],
+    'Bachelor of Laws (LLB)': ['MRU'],
+    'Master of Laws (LLM)': ['MRU'],
+    'Corporate Law': ['MRU'],
     'Master of Business Administration (MBA)': ['MREC', 'MRCET', 'MRIM'],
     'BBA': ['MRU'],
-    'Commerce-related courses': ['MRU'],
-    'Programs in various arts disciplines': ['MRU'],
-    'B.Sc. in Health Psychology': ['MRU'],
-    'Dialysis Technology': ['MRU'],
-    'Dental Technology': ['MRU'],
-    'Bachelor of Medicine, Bachelor of Surgery (MBBS)': ['MRIMS'],
-    'Bachelor of Dental Surgery (BDS)': ['MRIDS'],
-    'Bachelor of Pharmacy (B.Pharm)': ['MRCP'],
-    'Agriculture and related disciplines': ['MRU'],
-    'Basic and applied sciences': ['MRU']
+    'Commerce-related courses': ['MRU']
   };
-
   return collegeMap[course] || ['Local Community College'];
 }
 

@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  --primary: #2563eb;
-  --primary-light: #3b82f6;
-  --secondary: #8b5cf6;
-  --background: #f8fafc;
-  --chat-bg: #ffffff;
-  --text: #1e293b;
-  --border: #e2e8f0;
+  --primary: #0d47a1; /* Dark Blue */
+  --primary-light: #1565c0; /* Lighter Dark Blue */
+  --secondary: #8b5cf6; /* Purple for accents */
+  --background: #f8fafc; /* Light background */
+  --chat-bg: #ffffff; /* White chat background */
+  --text: #1e293b; /* Dark text */
+  --border: #e2e8f0; /* Light border */
 }
 
 * {
@@ -57,7 +57,7 @@ h1::after {
   left: -50%;
   width: 150%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transform: skewX(-25deg);
   animation: shimmer 3s infinite;
 }
@@ -80,7 +80,8 @@ h1::after {
   scroll-behavior: smooth;
 }
 
-.user-message, .bot-message {
+.user-message,
+.bot-message {
   max-width: 80%;
   margin: 0.5rem 0;
   padding: 1rem;
@@ -133,7 +134,7 @@ input {
 input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
 }
 
 button {
@@ -209,16 +210,17 @@ select:focus {
     height: 100vh;
     max-width: 100%;
   }
-  
+
   body {
     padding: 0;
   }
-  
+
   .chatbox {
     height: calc(100vh - 4rem);
   }
-  
-  .user-message, .bot-message {
+
+  .user-message,
+  .bot-message {
     max-width: 90%;
   }
 }
