@@ -1,13 +1,10 @@
-// script.js
-
 document.getElementById('sendButton').addEventListener('click', sendMessage);
-
 const conversation = document.getElementById('conversation');
 let currentState = 'start'; // Tracks the state of the conversation
 
 async function sendMessage() {
   const userInput = document.getElementById('userInput').value.trim();
-  if (!userInput) return;
+  if (!userInput && currentState !== 'interests') return;
 
   // Display user message
   addMessage(userInput, 'user-message');
@@ -33,40 +30,139 @@ function addMessage(text, className) {
 
 function handleBotResponse(input) {
   if (currentState === 'start') {
-    addMessage("Hello! I'm here to help you choose a course and find the best college. What are your interests? (e.g., technology, business, arts)", 'bot-message');
+    // Ask for interests with a dropdown
+    const interestsDropdown = `
+      <div class="dropdown-container">
+        <select id="interestsDropdown" multiple>
+          <option value="technology">Technology</option>
+          <option value="business">Business</option>
+          <option value="arts">Arts</option>
+          <option value="science">Science</option>
+        </select>
+        <button id="submitInterests">Submit</button>
+      </div>
+    `;
+    addMessage("Hello! I'm here to help you choose a course and find the best college. Please select your interests:", 'bot-message');
+    conversation.innerHTML += interestsDropdown;
+
+    // Handle dropdown submission
+    document.getElementById('submitInterests').addEventListener('click', () => {
+      const selectedInterests = Array.from(document.getElementById('interestsDropdown').selectedOptions).map(option => option.value);
+      if (selectedInterests.length > 0) {
+        addMessage(`You selected: ${selectedInterests.join(', ')}.`, 'user-message');
+        handleSelectedInterests(selectedInterests);
+      } else {
+        addMessage("Please select at least one interest.", 'bot-message');
+      }
+    });
+
     currentState = 'interests';
-  } else if (currentState === 'interests') {
-    const interest = input.toLowerCase();
-    const recommendedCourses = recommendCourses(interest);
-    addMessage(`Based on your interest in ${interest}, here are some recommended courses: ${recommendedCourses.join(', ')}.`, 'bot-message');
-    currentState = 'colleges';
   } else if (currentState === 'colleges') {
     const collegeMapping = mapColleges(input);
-    addMessage(`Here are some top colleges offering these courses: ${collegeMapping.join(', ')}.`, 'bot-message');
+    addMessage(`Here are some colleges offering these courses: ${collegeMapping.join(', ')}.`, 'bot-message');
     currentState = 'end';
   } else if (currentState === 'end') {
     addMessage("Thank you for using the Educational Tutoring Chatbot! If you have more questions, feel free to ask.", 'bot-message');
-    currentState = 'start'; // Reset state for new conversation
+    disableInputAndAddRetryButton();
   }
 }
 
-function recommendCourses(interest) {
+function handleSelectedInterests(interests) {
+  const recommendedCourses = recommendCourses(interests);
+  addMessage(`Based on your interests (${interests.join(', ')}), here are some recommended courses: ${recommendedCourses.join(', ')}.`, 'bot-message');
+  addMessage(`Which course would you prefer?`, 'bot-message');
+  currentState = 'colleges';
+}
+
+function recommendCourses(interests) {
   const courses = {
-    technology: ['Computer Science', 'Data Science', 'Artificial Intelligence', 'Cybersecurity'],
-    business: ['Business Administration', 'Finance', 'Marketing', 'Entrepreneurship'],
-    arts: ['Graphic Design', 'Fine Arts', 'Creative Writing', 'Film Studies'],
-    default: ['General Studies', 'Liberal Arts']
+    technology: [
+      'Computer Science and Engineering (CSE)',
+      'CSE (Artificial Intelligence and Machine Learning)',
+      'CSE (Data Science)',
+      'CSE (Cyber Security)',
+      'Information Technology (IT)',
+      'Electronics and Communication Engineering (ECE)',
+      'Electrical and Electronics Engineering (EEE)',
+      'Mechanical Engineering',
+      'Civil Engineering'
+    ],
+    business: [
+      'Master of Business Administration (MBA)',
+      'BBA',
+      'Commerce-related courses'
+    ],
+    arts: [
+      'Programs in various arts disciplines',
+      'B.Sc. in Health Psychology',
+      'Dialysis Technology',
+      'Dental Technology'
+    ],
+    science: [
+      'Bachelor of Medicine, Bachelor of Surgery (MBBS)',
+      'Bachelor of Dental Surgery (BDS)',
+      'Bachelor of Pharmacy (B.Pharm)',
+      'Agriculture and related disciplines',
+      'Basic and applied sciences'
+    ]
   };
-  return courses[interest] || courses['default'];
+
+  let recommended = [];
+  interests.forEach(interest => {
+    recommended = recommended.concat(courses[interest] || []);
+  });
+  return [...new Set(recommended)]; // Remove duplicates
 }
 
 function mapColleges(course) {
   const collegeMap = {
-    'Computer Science': ['MIT', 'Stanford University', 'Carnegie Mellon University'],
-    'Data Science': ['Harvard University', 'University of California, Berkeley', 'University of Washington'],
-    'Business Administration': ['Wharton School', 'Harvard Business School', 'INSEAD'],
-    'Graphic Design': ['Rhode Island School of Design', 'Parsons School of Design', 'Pratt Institute'],
-    default: ['Local Community College', 'State University']
+    'Computer Science and Engineering (CSE)': ['MREC', 'MRCET'],
+    'CSE (Artificial Intelligence and Machine Learning)': ['MREC', 'MRCET'],
+    'CSE (Data Science)': ['MREC', 'MRCET'],
+    'CSE (Cyber Security)': ['MRCET'],
+    'Information Technology (IT)': ['MREC', 'MRCET'],
+    'Electronics and Communication Engineering (ECE)': ['MREC', 'MRCET'],
+    'Electrical and Electronics Engineering (EEE)': ['MREC', 'MRCET'],
+    'Mechanical Engineering': ['MREC', 'MRCET'],
+    'Civil Engineering': ['MREC'],
+    'Mining Engineering': ['MREC'],
+    'Master of Business Administration (MBA)': ['MREC', 'MRCET', 'MRIM'],
+    'BBA': ['MRU'],
+    'Commerce-related courses': ['MRU'],
+    'Programs in various arts disciplines': ['MRU'],
+    'B.Sc. in Health Psychology': ['MRU'],
+    'Dialysis Technology': ['MRU'],
+    'Dental Technology': ['MRU'],
+    'Bachelor of Medicine, Bachelor of Surgery (MBBS)': ['MRIMS'],
+    'Bachelor of Dental Surgery (BDS)': ['MRIDS'],
+    'Bachelor of Pharmacy (B.Pharm)': ['MRCP'],
+    'Agriculture and related disciplines': ['MRU'],
+    'Basic and applied sciences': ['MRU']
   };
-  return collegeMap[course] || collegeMap['default'];
+
+  return collegeMap[course] || ['Local Community College'];
+}
+
+function disableInputAndAddRetryButton() {
+  document.getElementById('userInput').disabled = true;
+  document.getElementById('sendButton').disabled = true;
+
+  const retryButton = document.createElement('button');
+  retryButton.textContent = 'Retry';
+  retryButton.id = 'retryButton';
+  retryButton.addEventListener('click', () => {
+    resetConversation();
+  });
+
+  const messageDiv = document.createElement('div');
+  messageDiv.appendChild(retryButton);
+  conversation.appendChild(messageDiv);
+}
+
+function resetConversation() {
+  conversation.innerHTML = ''; // Clear conversation
+  currentState = 'start';
+  document.getElementById('userInput').disabled = false;
+  document.getElementById('sendButton').disabled = false;
+  handleBotResponse('');
 }
